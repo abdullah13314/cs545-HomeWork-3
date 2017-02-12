@@ -8,15 +8,13 @@
 
 import UIKit
 
-class LoadStoreImageViewController: UIViewController {
+class LoadStoreImageViewController: UIViewController, UIImagePickerControllerDelegate,
+UINavigationControllerDelegate {
     @IBOutlet weak var urlTextField: UITextField!
     @IBOutlet weak var imageView: UIImageView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        loadImage()
-
-        // Do any additional setup after loading the view.
     }
 
     override func didReceiveMemoryWarning() {
@@ -24,84 +22,48 @@ class LoadStoreImageViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     @IBAction func saveButton(_ sender: UIButton) {
-        
         if let urlText = urlTextField.text {
             if let url = URL(string: urlText) {
-        
-        let request = NSMutableURLRequest(url: url)
-        
-        let task = URLSession.shared.dataTask(with: request as URLRequest) {
-            data, response, error in
-            
-            if error != nil {
-                
-                print("error")
-                
-            } else {
-                
-                if let data = data {
-                    
-                    if let image = UIImage(data: data) {
-                        
-                        self.imageView.image = image
-                        
-                        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
-                        
-                        if documentsPath.count > 0 {
-                            
-                            let documentsDirectory = documentsPath[0]
-                            
-                            let savePath = documentsDirectory + "/currentImage.jpg"
-                            
-                            do {
-                                
-                                try UIImageJPEGRepresentation(image, 1)?.write(to: URL(fileURLWithPath: savePath))
-                                
-                            } catch {
-                                
-                                // process error
-                                
+                let request = NSMutableURLRequest(url: url)
+                let task = URLSession.shared.dataTask(with: request as URLRequest) {
+                    data, response, error in
+                    if error != nil {
+                        print("error")
+                    } else {
+                        if let data = data {
+                            if let image = UIImage(data: data) {
+                                UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
                             }
-                            
-                            
-                            
                         }
-                        
-                        
                     }
-                    
-                }
-                
-                
-            }
             
-        }
-        task.resume()
-        }
+                }
+                task.resume()
+            }
         }
     }
-    @IBAction func loadButton(_ sender: Any) {
-        loadImage()
+
+    @IBAction func openPhotoLibrary(_ sender: UIButton) {
+        if UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.photoLibrary) {
+            let imagePicker = UIImagePickerController()
+            imagePicker.delegate = self
+            imagePicker.sourceType = UIImagePickerControllerSourceType.photoLibrary;
+            imagePicker.allowsEditing = true
+            self.present(imagePicker, animated: true, completion: nil)
+            
+        }
     }
     
-    func loadImage () {
-        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
-        
-        if documentsPath.count > 0 {
-            
-            let documentsDirectory = documentsPath[0]
-            
-            let restorePath = documentsDirectory + "/currentImage.jpg"
-            
-            imageView.image = UIImage(contentsOfFile: restorePath)
-            
-            
-            
-            
-        }
-
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]){
+        let chosenImage = info[UIImagePickerControllerOriginalImage] as! UIImage //2
+        imageView.contentMode = .scaleAspectFit //3
+        imageView.image = chosenImage //4
+        dismiss(animated:true, completion: nil) //5
     }
-
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        dismiss(animated: true, completion: nil)
+    }
     /*
     // MARK: - Navigation
 
